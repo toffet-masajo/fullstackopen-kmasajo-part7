@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import Blog from './components/Blog';
 import NewBlogForm from './components/NewBlogForm';
 import Togglable from './components/Togglable';
-import blogService from './services/blogs';
+import { createBlog, deleteBlog, getAllBlogs, setToken, updateBlog } from './services/blogs';
 import loginService from './services/login';
 import { useNotificationDispatch, useNotificationValue } from './components/NotificationContext';
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
@@ -21,16 +21,33 @@ const App = () => {
     return 0;
   };
 
-  useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs.sort(compare)));
-  }, []);
+  const result = useQuery('blogs', getAllBlogs, { retry: false, refetchOnWindowFocus: false });
+
+  const queryClient = useQueryClient();
+  const newBlogMutation = useMutation(createBlog, {
+    onSuccess: (newBlog) => {
+      const blogs = queryClient.getQueryData('blogs');
+      newBlog.user = { username: user.username, name: user.name };
+      queryClient.setQueryData('blogs', blogs.concat(newBlog).sort(compare));
+      notificationDispatch({
+        type: 'NEW_MESSAGE',
+        payload: {
+          message: `a new blog ${newBlog.title} by ${newBlog.author} added`,
+          type: 'ok',
+        },
+      });
+    },
+    onError: ({ resp }) =>
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${resp.data.error}`, type: 'ng' } }),
+    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
+  });
 
   useEffect(() => {
     const userJSONobj = window.localStorage.getItem('loggedUser');
     if (userJSONobj) {
       const loggedUser = JSON.parse(userJSONobj);
       setUser(loggedUser);
-      blogService.setToken(loggedUser.token);
+      setToken(loggedUser.token);
     }
   }, []);
 
@@ -57,7 +74,7 @@ const App = () => {
 
       window.localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
       setUser(loggedUser);
-      blogService.setToken(loggedUser.token);
+      setToken(loggedUser.token);
       setUsername('');
       setPassword('');
     } catch (error) {
@@ -107,38 +124,20 @@ const App = () => {
   };
 
   const handleCreateBlog = async (newBlog) => {
-    try {
-      const data = await blogService.createBlog(newBlog);
-      data.user = { username: user.username, name: user.name };
-
-      setBlogs(blogs.concat(data).sort(compare));
-      notificationDispatch({
-        type: 'NEW_MESSAGE',
-        payload: {
-          message: `a new blog ${newBlog.title} by ${newBlog.author} added`,
-          type: 'ok',
-        },
-      });
-    } catch (error) {
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'error adding blog', type: 'ng' } });
-    } finally {
-      setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
-    }
+    newBlogMutation.mutate(newBlog);
   };
 
   const handleAddLike = async (updatedBlog) => {
     try {
-      const data = await blogService.updateBlog(updatedBlog);
-      setBlogs(
-        blogs
-          .map((blog) => {
-            if (blog.id === data.id) {
-              blog.likes = data.likes;
-            }
-            return blog;
-          })
-          .sort(compare)
-      );
+      const data = await updateBlog(updatedBlog);
+      blogs
+        .map((blog) => {
+          if (blog.id === data.id) {
+            blog.likes = data.likes;
+          }
+          return blog;
+        })
+        .sort(compare);
     } catch (error) {
       notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'error updating blog', type: 'ng' } });
       setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
@@ -147,8 +146,8 @@ const App = () => {
 
   const handleRemoveBlog = async (blogId) => {
     try {
-      await blogService.deleteBlog(blogId);
-      setBlogs(blogs.filter((blog) => blog.id !== blogId));
+      await deleteBlog(blogId);
+      blogs.filter((blog) => blog.id !== blogId);
     } catch (error) {
       notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'error deleting blog', type: 'ng' } });
       setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
@@ -181,6 +180,11 @@ const App = () => {
       </div>
     );
   };
+
+  if (result.isLoading) return <div>loading data...</div>;
+  if (result.isError) return <div>blog service not available due to problems in the server.</div>;
+
+  const blogs = result.data.sort(compare);
 
   return <div>{user === null ? loginForm() : blogForm()}</div>;
 };
