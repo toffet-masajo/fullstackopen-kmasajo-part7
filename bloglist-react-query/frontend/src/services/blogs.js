@@ -35,7 +35,7 @@ export const deleteBlog = async (id) => {
   };
 
   const { data } = await axios.delete(`${baseUrl}/${id}`, config);
-  return data;
+  return data ? data : id;
 };
 
 export const getAllBlogs = () => {

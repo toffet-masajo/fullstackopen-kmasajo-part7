@@ -12,8 +12,9 @@ const App = () => {
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
 
-  const notificationDispatch = useNotificationDispatch();
   const message = useNotificationValue();
+  const notificationDispatch = useNotificationDispatch();
+  const queryClient = useQueryClient();
 
   const compare = (a, b) => {
     if (a.likes > b.likes) return -1;
@@ -23,7 +24,6 @@ const App = () => {
 
   const result = useQuery('blogs', getAllBlogs, { retry: false, refetchOnWindowFocus: false });
 
-  const queryClient = useQueryClient();
   const newBlogMutation = useMutation(createBlog, {
     onSuccess: (newBlog) => {
       const blogs = queryClient.getQueryData('blogs');
@@ -37,8 +37,38 @@ const App = () => {
         },
       });
     },
-    onError: ({ resp }) =>
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${resp.data.error}`, type: 'ng' } }),
+    onError: ({ response }) =>
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } }),
+    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
+  });
+
+  const likeBlogMutation = useMutation(updateBlog, {
+    onSuccess: (updatedBlog) => {
+      const blogs = queryClient.getQueryData('blogs');
+      queryClient.setQueryData(
+        'blogs',
+        blogs.map((blog) => {
+          if (blog.id === updatedBlog.id) return updatedBlog;
+          return blog;
+        })
+      );
+    },
+    onError: ({ response }) =>
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } }),
+    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
+  });
+
+  const deleteBlogMutation = useMutation(deleteBlog, {
+    onSuccess: (blogId) => {
+      const blogs = queryClient.getQueryData('blogs');
+      queryClient.setQueryData(
+        'blogs',
+        blogs.filter((blog) => blog.id !== blogId)
+      );
+    },
+    onError: ({ response }) => {
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } });
+    },
     onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
   });
 
@@ -128,30 +158,11 @@ const App = () => {
   };
 
   const handleAddLike = async (updatedBlog) => {
-    try {
-      const data = await updateBlog(updatedBlog);
-      blogs
-        .map((blog) => {
-          if (blog.id === data.id) {
-            blog.likes = data.likes;
-          }
-          return blog;
-        })
-        .sort(compare);
-    } catch (error) {
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'error updating blog', type: 'ng' } });
-      setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
-    }
+    likeBlogMutation.mutate(updatedBlog);
   };
 
   const handleRemoveBlog = async (blogId) => {
-    try {
-      await deleteBlog(blogId);
-      blogs.filter((blog) => blog.id !== blogId);
-    } catch (error) {
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'error deleting blog', type: 'ng' } });
-      setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
-    }
+    deleteBlogMutation.mutate(blogId);
   };
 
   const blogForm = () => {
