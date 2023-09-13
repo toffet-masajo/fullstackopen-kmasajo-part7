@@ -2,17 +2,17 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import Blog from './components/Blog';
 import NewBlogForm from './components/NewBlogForm';
-import Togglable from './components/Togglable';
 import { createBlog, deleteBlog, getAllBlogs, setToken, updateBlog } from './services/blogs';
 import loginService from './services/login';
-import { useNotificationDispatch, useNotificationValue } from './components/NotificationContext';
+import { useNotificationDispatch } from './components/NotificationContext';
+
+import LoginForm from './components/LoginForm';
+import Notification from './components/Notification';
+import Togglable from './components/Togglable';
 
 const App = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
 
-  const message = useNotificationValue();
   const notificationDispatch = useNotificationDispatch();
   const queryClient = useQueryClient();
 
@@ -81,34 +81,17 @@ const App = () => {
     }
   }, []);
 
-  const messageForm = () => {
-    if (message === null) return null;
-    if (message.type === 'ok')
-      return (
-        <div className="success-message" style={{ color: 'green' }}>
-          <h2>{message.message}</h2>
-        </div>
-      );
-    return (
-      <div className="error-message" style={{ color: 'red' }}>
-        <h2>{message.message}</h2>
-      </div>
-    );
-  };
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-
+  const handleLogin = async (username, password) => {
     try {
       const loggedUser = await loginService.login({ username, password });
 
       window.localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
       setUser(loggedUser);
       setToken(loggedUser.token);
-      setUsername('');
-      setPassword('');
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'login successful', type: 'ok' } });
     } catch (error) {
       notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'wrong username or password', type: 'ng' } });
+    } finally {
       setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
     }
   };
@@ -117,40 +100,8 @@ const App = () => {
     event.preventDefault();
     setUser(null);
     window.localStorage.removeItem('loggedUser');
-  };
-
-  const loginForm = () => {
-    return (
-      <div>
-        <h2>Log in to application</h2>
-        {message && messageForm()}
-        <form onSubmit={handleLogin}>
-          <div>
-            username{' '}
-            <input
-              id="username"
-              type="text"
-              value={username}
-              name="Username"
-              onChange={({ target }) => setUsername(target.value)}
-            />
-          </div>
-          <div>
-            password{' '}
-            <input
-              id="password"
-              type="password"
-              value={password}
-              name="Password"
-              onChange={({ target }) => setPassword(target.value)}
-            />
-          </div>
-          <button id="login-button" type="submit">
-            Login
-          </button>
-        </form>
-      </div>
-    );
+    notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'Logged out!', type: 'ok' } });
+    setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
   };
 
   const handleCreateBlog = async (newBlog) => {
@@ -165,39 +116,45 @@ const App = () => {
     deleteBlogMutation.mutate(blogId);
   };
 
-  const blogForm = () => {
-    return (
-      <div>
-        <h2>Blogs</h2>
-        {message && messageForm()}
-        <p>
-          {user.name} logged in{' '}
-          <button id="logout-button" onClick={handleLogout}>
-            logout
-          </button>
-        </p>
-        <Togglable buttonLabel="new blog">
-          <NewBlogForm handleCreate={handleCreateBlog} />
-        </Togglable>
-        {blogs.map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            user={user.username}
-            handleUpdate={handleAddLike}
-            handleDelete={handleRemoveBlog}
-          />
-        ))}
-      </div>
-    );
-  };
-
   if (result.isLoading) return <div>loading data...</div>;
   if (result.isError) return <div>blog service not available due to problems in the server.</div>;
 
   const blogs = result.data.sort(compare);
 
-  return <div>{user === null ? loginForm() : blogForm()}</div>;
+  if (user === null) {
+    return (
+      <>
+        <h2>Log in to application</h2>
+        <Notification />
+        <LoginForm onLogin={handleLogin} />
+      </>
+    );
+  }
+
+  return (
+    <div>
+      <h2>Blogs</h2>
+      <Notification />
+      <p>
+        {user.name} logged in{' '}
+        <button id="logout-button" onClick={handleLogout}>
+          logout
+        </button>
+      </p>
+      <Togglable buttonLabel="new blog">
+        <NewBlogForm handleCreate={handleCreateBlog} />
+      </Togglable>
+      {blogs.map((blog) => (
+        <Blog
+          key={blog.id}
+          blog={blog}
+          user={user.username}
+          handleUpdate={handleAddLike}
+          handleDelete={handleRemoveBlog}
+        />
+      ))}
+    </div>
+  );
 };
 
 export default App;
