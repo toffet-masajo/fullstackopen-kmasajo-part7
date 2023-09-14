@@ -1,12 +1,29 @@
 import { useState } from 'react';
 
-const LoginForm = ({ onLogin }) => {
+import login from '../services/login';
+import { setToken } from '../services/blogs';
+import { useNotificationDispatch } from '../context/NotificationContext';
+import { useUserDispatch } from '../context/UserContext';
+
+const LoginForm = () => {
+  const userDispatch = useUserDispatch();
+  const notificationDispatch = useNotificationDispatch();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
-    onLogin(username, password);
+    try {
+      const loggedUser = await login({ username, password });
+      window.localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
+      userDispatch({ type: 'SET_USER', payload: loggedUser });
+      setToken(loggedUser.token);
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'login successful', type: 'ok' } });
+    } catch (error) {
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'wrong username or password', type: 'ng' } });
+    } finally {
+      setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
+    }
   };
 
   return (
@@ -14,18 +31,11 @@ const LoginForm = ({ onLogin }) => {
       <form onSubmit={handleLogin}>
         <div>
           username{' '}
-          <input
-            id="username"
-            type="text"
-            value={username}
-            name="Username"
-            onChange={({ target }) => setUsername(target.value)}
-          />
+          <input type="text" value={username} name="Username" onChange={({ target }) => setUsername(target.value)} />
         </div>
         <div>
           password{' '}
           <input
-            id="password"
             type="password"
             value={password}
             name="Password"
