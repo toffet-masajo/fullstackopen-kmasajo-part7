@@ -1,75 +1,16 @@
 import { useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { createBlog, deleteBlog, getAllBlogs, setToken, updateBlog } from './services/blogs';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useUserValue, useUserDispatch } from './context/UserContext';
-import { useNotificationDispatch } from './context/NotificationContext';
+import { setToken } from './services/blogs';
 
-import Blog from './components/Blog';
+import BlogList from './components/BlogList';
 import LoginForm from './components/LoginForm';
-import NewBlogForm from './components/NewBlogForm';
 import Notification from './components/Notification';
-import Togglable from './components/Togglable';
+import UsersList from './components/UsersList';
 
 const App = () => {
   const user = useUserValue();
   const userDispatch = useUserDispatch();
-  const notificationDispatch = useNotificationDispatch();
-  const queryClient = useQueryClient();
-
-  const compare = (a, b) => {
-    if (a.likes > b.likes) return -1;
-    if (a.likes < b.likes) return 1;
-    return 0;
-  };
-
-  const newBlogMutation = useMutation(createBlog, {
-    onSuccess: (newBlog) => {
-      const blogs = queryClient.getQueryData('blogs');
-      newBlog.user = { username: user.username, name: user.name };
-      queryClient.setQueryData('blogs', blogs.concat(newBlog).sort(compare));
-      notificationDispatch({
-        type: 'NEW_MESSAGE',
-        payload: {
-          message: `a new blog ${newBlog.title} by ${newBlog.author} added`,
-          type: 'ok',
-        },
-      });
-    },
-    onError: ({ response }) =>
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } }),
-    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
-  });
-
-  const likeBlogMutation = useMutation(updateBlog, {
-    onSuccess: (updatedBlog) => {
-      const blogs = queryClient.getQueryData('blogs');
-      updatedBlog.user = { username: user.username, name: user.name };
-      queryClient.setQueryData(
-        'blogs',
-        blogs.map((blog) => {
-          if (blog.id === updatedBlog.id) return updatedBlog;
-          return blog;
-        })
-      );
-    },
-    onError: ({ response }) =>
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } }),
-    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
-  });
-
-  const deleteBlogMutation = useMutation(deleteBlog, {
-    onSuccess: (blogId) => {
-      const blogs = queryClient.getQueryData('blogs');
-      queryClient.setQueryData(
-        'blogs',
-        blogs.filter((blog) => blog.id !== blogId)
-      );
-    },
-    onError: ({ response }) => {
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } });
-    },
-    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
-  });
 
   useEffect(() => {
     const userJSONobj = window.localStorage.getItem('loggedUser');
@@ -79,32 +20,6 @@ const App = () => {
       setToken(loggedUser.token);
     }
   }, []);
-
-  const handleLogout = (event) => {
-    event.preventDefault();
-    window.localStorage.removeItem('loggedUser');
-    userDispatch({ type: 'SET_USER', payload: null });
-    notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: 'Logged out!', type: 'ok' } });
-    setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000);
-  };
-
-  const handleCreateBlog = async (newBlog) => {
-    newBlogMutation.mutate(newBlog);
-  };
-
-  const handleAddLike = async (updatedBlog) => {
-    likeBlogMutation.mutate(updatedBlog);
-  };
-
-  const handleRemoveBlog = async (blogId) => {
-    deleteBlogMutation.mutate(blogId);
-  };
-
-  const result = useQuery('blogs', getAllBlogs, { retry: false, refetchOnWindowFocus: false });
-  if (result.isLoading) return <div>loading data...</div>;
-  if (result.isError) return <div>blog service not available due to problems in the server.</div>;
-
-  const blogs = result.data.sort(compare);
 
   if (user === null) {
     return (
@@ -117,28 +32,12 @@ const App = () => {
   }
 
   return (
-    <div>
-      <h2>Blogs</h2>
-      <Notification />
-      <p>
-        {user.name} logged in{' '}
-        <button id="logout-button" onClick={handleLogout}>
-          logout
-        </button>
-      </p>
-      <Togglable buttonLabel="new blog">
-        <NewBlogForm handleCreate={handleCreateBlog} />
-      </Togglable>
-      {blogs.map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          user={user.username}
-          handleUpdate={handleAddLike}
-          handleDelete={handleRemoveBlog}
-        />
-      ))}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/users" element={<UsersList />} />
+        <Route path="/" element={<BlogList />} />
+      </Routes>
+    </Router>
   );
 };
 
