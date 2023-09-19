@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import { useUserValue, useUserDispatch } from './context/UserContext';
 import { setToken } from './services/blogs';
-
 import BlogList from './components/BlogList';
 import LoginForm from './components/LoginForm';
 import Notification from './components/Notification';
+import User from './components/User';
 import UsersList from './components/UsersList';
 
 const App = () => {
@@ -34,8 +35,9 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/users" element={<UsersList />} />
         <Route path="/" element={<BlogList />} />
+        <Route path="/users" element={<UsersList />} />
+        <Route path="/users/:id" element={<User />} />
       </Routes>
     </Router>
   );

@@ -1,4 +1,6 @@
 import { useQuery } from 'react-query';
+import { Link } from 'react-router-dom';
+
 import { getAllUsers } from '../services/users';
 import LogOutForm from './LogoutForm';
 
@@ -24,9 +26,11 @@ const UsersList = () => {
         </thead>
         <tbody>
           {users &&
-            users.map((user, idx) => (
-              <tr key={idx}>
-                <td>{user.name}</td>
+            users.map((user) => (
+              <tr key={user.id}>
+                <td>
+                  <Link to={`/users/${user.id}`}>{user.name}</Link>
+                </td>
                 <td>{user.blogs.length}</td>
               </tr>
             ))}
