@@ -1,41 +1,53 @@
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useParams } from 'react-router-dom';
 
-const Blog = ({ blog, user, handleUpdate, handleDelete }) => {
-  const [visible, setVisible] = useState(false);
+import { getBlog, updateBlog } from '../services/blogs';
+import { useNotificationDispatch } from '../context/NotificationContext';
+import LogoutForm from './LogoutForm';
 
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5
-  };
+const Blog = () => {
+  const queryClient = useQueryClient();
+  const blogId = useParams().id;
+  const notificationDispatch = useNotificationDispatch();
 
-  const handleLikeButton = (event) => {
+  const likeBlogMutation = useMutation(updateBlog, {
+    onSuccess: (updatedBlog) => {
+      // const blog = queryClient.getQueryData('blog');
+      // queryClient.setQueryData('blog', { ...blog, likes: updatedBlog.likes });
+      queryClient.invalidateQueries('blog');
+      queryClient.setQueryData('blog', { ...blog, likes: updatedBlog.likes });
+    },
+    onError: ({ response }) =>
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } }),
+    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
+  });
+
+  const handleLikeButton = async (event) => {
     event.preventDefault();
-    handleUpdate(blog);
+    likeBlogMutation.mutate({ ...blog });
   };
 
-  const handleDeleteButton = (event) => {
-    event.preventDefault();
-    if(window.confirm(`Remove blog ${blog.title} by ${blog.author}`))
-      handleDelete(blog.id);
-  };
+  const result = useQuery(['blog', blogId], () => getBlog(blogId), { retry: false, refetchOnWindowFocus: false });
+  if (result.isLoading) return <div>loading blog data...</div>;
+  if (result.isError) return <div>blog service not available due to problems in the server.</div>;
+
+  const blog = result.data;
+  queryClient.setQueryData('blog', blog);
 
   return (
-    <div style={blogStyle} className='blog'>
-      {blog.title} {blog.author} <button onClick={() => setVisible(!visible)}>{visible ? 'hide' : 'view'}</button>
-      { visible &&
-        <div className='blog-details'>
-          {blog.url}<br />
-          {blog.likes} <button id='like-blog-button' onClick={handleLikeButton}>like</button><br />
-          {blog.user.name}<br />
-          { user === blog.user.username
-            ? <button id='remove-blog-button' onClick={handleDeleteButton}>remove</button>
-            : null
-          }
-        </div>
-      }
+    <div>
+      <LogoutForm />
+      <h2>{blog.title}</h2>
+      <p>
+        <a href={blog.url}>{blog.url}</a>
+        <br />
+        {blog.likes} likes
+        <button id="like-blog-button" onClick={handleLikeButton}>
+          like
+        </button>
+        <br />
+        added by {blog.user.name}
+      </p>
     </div>
   );
 };

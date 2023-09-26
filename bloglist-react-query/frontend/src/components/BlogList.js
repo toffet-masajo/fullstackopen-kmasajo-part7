@@ -2,17 +2,25 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 import { useUserValue } from '../context/UserContext';
 import { useNotificationDispatch } from '../context/NotificationContext';
-import { createBlog, deleteBlog, getAllBlogs, updateBlog } from '../services/blogs';
+import { createBlog, getAllBlogs } from '../services/blogs';
 
-import Blog from './Blog';
 import NewBlogForm from './NewBlogForm';
 import Togglable from './Togglable';
 import LogoutForm from './LogoutForm';
+import { Link } from 'react-router-dom';
 
 const BlogList = () => {
   const user = useUserValue();
   const notificationDispatch = useNotificationDispatch();
   const queryClient = useQueryClient();
+
+  const blogStyle = {
+    paddingTop: 10,
+    paddingLeft: 2,
+    border: 'solid',
+    borderWidth: 1,
+    marginBottom: 5,
+  };
 
   const compare = (a, b) => {
     if (a.likes > b.likes) return -1;
@@ -38,47 +46,8 @@ const BlogList = () => {
     onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
   });
 
-  const likeBlogMutation = useMutation(updateBlog, {
-    onSuccess: (updatedBlog) => {
-      const blogs = queryClient.getQueryData('blogs');
-      updatedBlog.user = { username: user.username, name: user.name };
-      queryClient.setQueryData(
-        'blogs',
-        blogs.map((blog) => {
-          if (blog.id === updatedBlog.id) return updatedBlog;
-          return blog;
-        })
-      );
-    },
-    onError: ({ response }) =>
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } }),
-    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
-  });
-
-  const deleteBlogMutation = useMutation(deleteBlog, {
-    onSuccess: (blogId) => {
-      const blogs = queryClient.getQueryData('blogs');
-      queryClient.setQueryData(
-        'blogs',
-        blogs.filter((blog) => blog.id !== blogId)
-      );
-    },
-    onError: ({ response }) => {
-      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } });
-    },
-    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
-  });
-
   const handleCreateBlog = async (newBlog) => {
     newBlogMutation.mutate(newBlog);
-  };
-
-  const handleAddLike = async (updatedBlog) => {
-    likeBlogMutation.mutate(updatedBlog);
-  };
-
-  const handleRemoveBlog = async (blogId) => {
-    deleteBlogMutation.mutate(blogId);
   };
 
   const result = useQuery('blogs', getAllBlogs, { retry: false, refetchOnWindowFocus: false });
@@ -94,13 +63,9 @@ const BlogList = () => {
         <NewBlogForm handleCreate={handleCreateBlog} />
       </Togglable>
       {blogs.map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          user={user.username}
-          handleUpdate={handleAddLike}
-          handleDelete={handleRemoveBlog}
-        />
+        <div key={blog.id} style={blogStyle}>
+          <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
+        </div>
       ))}
     </div>
   );
