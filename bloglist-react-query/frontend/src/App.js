@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 import { useUserValue, useUserDispatch } from './context/UserContext';
 import { setToken } from './services/blogs';
@@ -33,8 +33,19 @@ const App = () => {
     );
   }
 
+  const linkStyle = { padding: 5 };
+
   return (
     <Router>
+      <div>
+        <Link style={linkStyle} to="/">
+          blogs
+        </Link>
+        <Link style={linkStyle} to="/users">
+          users
+        </Link>
+      </div>
+
       <Routes>
         <Route path="/" element={<BlogList />} />
         <Route path="/users" element={<UsersList />} />

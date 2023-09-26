@@ -5,7 +5,7 @@ import { getAllUsers } from '../services/users';
 import LogOutForm from './LogoutForm';
 
 const UsersList = () => {
-  const result = useQuery('blogs', getAllUsers, { retry: false, refetchOnWindowFocus: false });
+  const result = useQuery('users', getAllUsers, { retry: false, refetchOnWindowFocus: false });
   if (result.isLoading) return <div>loading data...</div>;
   if (result.isError) return <div>user service not available due to problems in the server.</div>;
 
