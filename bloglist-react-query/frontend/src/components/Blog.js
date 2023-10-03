@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useParams } from 'react-router-dom';
 
-import { getBlog, updateBlog } from '../services/blogs';
+import { addComment, getBlog, updateBlog } from '../services/blogs';
 import { useNotificationDispatch } from '../context/NotificationContext';
 import LogoutForm from './LogoutForm';
 
@@ -22,9 +22,28 @@ const Blog = () => {
     onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
   });
 
+  const addCommentMutation = useMutation(addComment, {
+    onSuccess: (newComment) => {
+      // const blog = queryClient.getQueryData('blog');
+      // queryClient.setQueryData('blog', { ...blog, comments: blog.comments.concat(newComment) });
+      queryClient.invalidateQueries('blog');
+      queryClient.setQueryData('blog', { ...blog, comments: blog.comments.concat(newComment) });
+    },
+    onError: ({ response }) =>
+      notificationDispatch({ type: 'NEW_MESSAGE', payload: { message: `${response.data.error}`, type: 'ng' } }),
+    onSettled: () => setTimeout(() => notificationDispatch({ type: 'CLEAR_MESSAGE' }), 5000),
+  });
+
   const handleLikeButton = async (event) => {
     event.preventDefault();
     likeBlogMutation.mutate({ ...blog });
+  };
+
+  const handleAddComment = async (event) => {
+    event.preventDefault();
+    const content = event.target.comment.value;
+    event.target.comment.value = '';
+    addCommentMutation.mutate({ content, blogId: blog.id });
   };
 
   const result = useQuery(['blog', blogId], () => getBlog(blogId), { retry: false, refetchOnWindowFocus: false });
@@ -47,14 +66,17 @@ const Blog = () => {
         </button>
         <br />
         added by {blog.user.name}
-        <br />
-        <h2>comments</h2>
-        <ul>
-          {blog.comments.map((comment, idx) => (
-            <li key={idx}>{comment.content}</li>
-          ))}
-        </ul>
       </p>
+      <h2>comments</h2>
+      <form onSubmit={handleAddComment}>
+        <input type="text" placeholder="comment" name="comment" />
+        <button>add comment</button>
+      </form>
+      <ul>
+        {blog.comments.map((comment, idx) => (
+          <li key={idx}>{comment.content}</li>
+        ))}
+      </ul>
     </div>
   );
 };

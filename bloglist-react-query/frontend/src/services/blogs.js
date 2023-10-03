@@ -46,6 +46,10 @@ export const getBlog = (id) => {
   return axios.get(`${baseUrl}/${id}`).then((response) => response.data);
 };
 
+export const addComment = ({ blogId, content }) => {
+  return axios.post(`${baseUrl}/${blogId}/comments`, { blogId, content }).then((response) => response.data);
+};
+
 export const setToken = (newToken) => {
   token = `Bearer ${newToken}`;
 };
