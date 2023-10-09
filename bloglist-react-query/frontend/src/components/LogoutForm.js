@@ -1,6 +1,5 @@
 import { useNotificationDispatch } from '../context/NotificationContext';
 import { useUserDispatch, useUserValue } from '../context/UserContext';
-import Notification from './Notification';
 
 const LogoutForm = () => {
   const user = useUserValue();
@@ -17,8 +16,6 @@ const LogoutForm = () => {
 
   return (
     <div>
-      <h2>Blogs</h2>
-      <Notification />
       <p>
         {user.name} logged in{' '}
         <button id="logout-button" onClick={handleLogout}>

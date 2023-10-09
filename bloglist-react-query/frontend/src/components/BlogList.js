@@ -58,13 +58,18 @@ const BlogList = () => {
 
   return (
     <div>
-      <LogoutForm />
-      <Togglable buttonLabel="new blog">
-        <NewBlogForm handleCreate={handleCreateBlog} />
-      </Togglable>
+      {user && (
+        <div>
+          <LogoutForm />
+          <Togglable buttonLabel="new blog">
+            <NewBlogForm handleCreate={handleCreateBlog} />
+          </Togglable>
+        </div>
+      )}
+      <h2>Blogs</h2>
       {blogs.map((blog) => (
         <div key={blog.id} style={blogStyle}>
-          <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
+          <Link to={`/blogs/${blog.id}`}>{blog.title}</Link> by {blog.author}
         </div>
       ))}
     </div>

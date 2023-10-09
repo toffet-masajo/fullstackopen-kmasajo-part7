@@ -1,12 +1,14 @@
 import { createContext, useContext, useReducer } from 'react';
 
+const initialState = null;
+
 /* eslint-disable indent */
 const messageReducer = (state, action) => {
   switch (action.type) {
     case 'NEW_MESSAGE':
       return action.payload;
     case 'CLEAR_MESSAGE':
-      return {};
+      return initialState;
     default:
       return state;
   }
@@ -15,7 +17,7 @@ const messageReducer = (state, action) => {
 const NotificationContext = createContext();
 
 export const NotificationContextProvider = (props) => {
-  const [message, messageDispatch] = useReducer(messageReducer, '');
+  const [message, messageDispatch] = useReducer(messageReducer, null);
 
   return (
     <NotificationContext.Provider value={[message, messageDispatch]}>{props.children}</NotificationContext.Provider>

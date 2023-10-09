@@ -4,10 +4,12 @@ import { useParams } from 'react-router-dom';
 import { addComment, getBlog, updateBlog } from '../services/blogs';
 import { useNotificationDispatch } from '../context/NotificationContext';
 import LogoutForm from './LogoutForm';
+import { useUserValue } from '../context/UserContext';
 
 const Blog = () => {
   const queryClient = useQueryClient();
   const blogId = useParams().id;
+  const user = useUserValue();
   const notificationDispatch = useNotificationDispatch();
 
   const likeBlogMutation = useMutation(updateBlog, {
@@ -55,15 +57,17 @@ const Blog = () => {
 
   return (
     <div>
-      <LogoutForm />
+      {user && <LogoutForm />}
       <h2>{blog.title}</h2>
       <p>
         <a href={blog.url}>{blog.url}</a>
         <br />
         {blog.likes} likes
-        <button id="like-blog-button" onClick={handleLikeButton}>
-          like
-        </button>
+        {user && (
+          <button id="like-blog-button" onClick={handleLikeButton}>
+            like
+          </button>
+        )}
         <br />
         added by {blog.user.name}
       </p>
