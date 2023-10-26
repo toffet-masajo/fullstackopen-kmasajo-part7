@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
 import Blog from './components/Blog';
 import NewBlogForm from './components/NewBlogForm';
 import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
+import { setNotification } from './reducers/notificationReducer';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
-  const [message, setMessage] = useState({});
+  const notification = useSelector((state) => state.notification);
+  const dispatch = useDispatch();
 
   const compare = (a, b) => {
     if (a.likes > b.likes) return -1;
@@ -18,49 +20,26 @@ const App = () => {
     return 0;
   };
 
-  useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs.sort(compare)));
-  }, []);
+  useEffect(() => {}, []);
 
   useEffect(() => {
     const userJSONobj = window.localStorage.getItem('loggedUser');
     if (userJSONobj) {
       const loggedUser = JSON.parse(userJSONobj);
       setUser(loggedUser);
+      blogService.getAll().then((blogs) => setBlogs(blogs.sort(compare)));
       blogService.setToken(loggedUser.token);
     }
   }, []);
 
-  const messageForm = () => {
-    if (message === null) return null;
-    if (message.type === 'ok')
-      return (
-        <div className="success-message" style={{ color: 'green' }}>
-          <h2>{message.message}</h2>
-        </div>
-      );
+  const Message = () => {
+    if (notification === null) return null;
+
     return (
-      <div className="error-message" style={{ color: 'red' }}>
-        <h2>{message.message}</h2>
+      <div style={{ color: notification.type === 'ok' ? 'green' : 'red' }}>
+        <h2>{notification.message}</h2>
       </div>
     );
-  };
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-
-    try {
-      const loggedUser = await loginService.login({ username, password });
-
-      window.localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
-      setUser(loggedUser);
-      blogService.setToken(loggedUser.token);
-      setUsername('');
-      setPassword('');
-    } catch (error) {
-      setMessage({ message: 'wrong username or password', type: 'ng' });
-      setTimeout(() => setMessage(null), 5000);
-    }
   };
 
   const handleLogout = (event) => {
@@ -69,31 +48,34 @@ const App = () => {
     window.localStorage.removeItem('loggedUser');
   };
 
-  const loginForm = () => {
+  const Login = () => {
+    const handleLogin = async (event) => {
+      event.preventDefault();
+
+      try {
+        const username = event.target.username.value;
+        const password = event.target.password.value;
+        const loggedUser = await loginService.login({ username, password });
+
+        window.localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
+        setUser(loggedUser);
+        blogService.setToken(loggedUser.token);
+        blogService.getAll().then((blogs) => setBlogs(blogs.sort(compare)));
+      } catch (error) {
+        dispatch(setNotification({ message: 'wrong username or password', type: 'ng' }, 5));
+      }
+    };
+
     return (
       <div>
         <h2>Log in to application</h2>
-        {message && messageForm()}
+        {notification && <Message />}
         <form onSubmit={handleLogin}>
           <div>
-            username{' '}
-            <input
-              id="username"
-              type="text"
-              value={username}
-              name="Username"
-              onChange={({ target }) => setUsername(target.value)}
-            />
+            username <input key="username" type="text" name="username" />
           </div>
           <div>
-            password{' '}
-            <input
-              id="password"
-              type="password"
-              value={password}
-              name="Password"
-              onChange={({ target }) => setPassword(target.value)}
-            />
+            password <input key="password" type="password" name="password" />
           </div>
           <button id="login-button" type="submit">
             Login
@@ -109,14 +91,17 @@ const App = () => {
       data.user = { username: user.username, name: user.name };
 
       setBlogs(blogs.concat(data).sort(compare));
-      setMessage({
-        message: `a new blog ${newBlog.title} by ${newBlog.author} added`,
-        type: 'ok',
-      });
+      dispatch(
+        setNotification(
+          {
+            message: `a new blog ${newBlog.title} by ${newBlog.author} added`,
+            type: 'ok',
+          },
+          5
+        )
+      );
     } catch (error) {
-      setMessage({ message: 'error adding blog', type: 'ng' });
-    } finally {
-      setTimeout(() => setMessage(null), 5000);
+      dispatch(setNotification({ message: 'error adding blog', type: 'ng' }, 5));
     }
   };
 
@@ -134,8 +119,7 @@ const App = () => {
           .sort(compare)
       );
     } catch (error) {
-      setMessage({ message: 'error updating blog', type: 'ng' });
-      setTimeout(() => setMessage(null), 5000);
+      dispatch(setNotification({ message: 'error updating blog', type: 'ng' }, 5));
     }
   };
 
@@ -143,17 +127,15 @@ const App = () => {
     try {
       await blogService.deleteBlog(blogId);
       setBlogs(blogs.filter((blog) => blog.id !== blogId));
+      dispatch(setNotification({ message: 'blog successfully deleted', type: 'ok' }, 5));
     } catch (error) {
-      setMessage({ message: 'error deleting blog', type: 'ng' });
-      setTimeout(() => setMessage(null), 5000);
+      dispatch(setNotification({ message: 'error deleting blog', type: 'ng' }, 5));
     }
   };
 
-  const blogForm = () => {
+  const BlogList = () => {
     return (
       <div>
-        <h2>Blogs</h2>
-        {message && messageForm()}
         <p>
           {user.name} logged in{' '}
           <button id="logout-button" onClick={handleLogout}>
@@ -176,7 +158,15 @@ const App = () => {
     );
   };
 
-  return <div>{user === null ? loginForm() : blogForm()}</div>;
+  if (!user) return <Login />;
+
+  return (
+    <div>
+      <h2>Blogs</h2>
+      {notification && <Message />}
+      <BlogList />
+    </div>
+  );
 };
 
 export default App;
