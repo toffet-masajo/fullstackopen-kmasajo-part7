@@ -1,22 +1,18 @@
 import PropTypes from 'prop-types';
-import { useState } from 'react';
 
 const NewBlogForm = ({ handleCreate }) => {
-  const [title, setTitle] = useState(null);
-  const [author, setAuthor] = useState(null);
-  const [url, setUrl] = useState(null);
-
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    const title = event.target.title.value;
+    const author = event.target.author.value;
+    const url = event.target.url.value;
+
     handleCreate({
       title: title,
       author: author,
       url: url,
     });
-
-    setTitle(null);
-    setAuthor(null);
-    setUrl(null);
   };
 
   return (
@@ -25,37 +21,16 @@ const NewBlogForm = ({ handleCreate }) => {
       <form onSubmit={handleSubmit}>
         <div>
           <div>
-            title:{' '}
-            <input
-              id="blog-title"
-              type="text"
-              placeholder="blog title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-            />
+            title: <input key="blog-title" type="text" name="title" placeholder="blog title" />
           </div>
           <div>
-            author:{' '}
-            <input
-              id="blog-author"
-              type="text"
-              placeholder="blog author"
-              value={author}
-              onChange={(event) => setAuthor(event.target.value)}
-            />
+            author: <input key="blog-author" type="text" name="author" placeholder="blog author" />
           </div>
           <div>
-            url:{' '}
-            <input
-              id="blog-url"
-              type="text"
-              placeholder="blog url"
-              value={url}
-              onChange={(event) => setUrl(event.target.value)}
-            />
+            url: <input key="blog-url" type="text" name="url" placeholder="blog url" />
           </div>
           <div>
-            <button id="create-button" type="submit">
+            <button key="create-button" type="submit">
               create
             </button>
           </div>

@@ -8,19 +8,19 @@ import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
 import { setNotification } from './reducers/notificationReducer';
-import { initializeBlogs, setBlogs } from './reducers/blogReducer';
+import { addBlogLike, createNewBlog, initializeBlogs, removeBlog } from './reducers/blogReducer';
+
+const compare = (a, b) => {
+  if (a.likes > b.likes) return -1;
+  if (a.likes < b.likes) return 1;
+  return 0;
+};
 
 const App = () => {
   const [user, setUser] = useState(null);
   const blogs = useSelector((state) => state.blogs);
   const notification = useSelector((state) => state.notification);
   const dispatch = useDispatch();
-
-  const compare = (a, b) => {
-    if (a.likes > b.likes) return -1;
-    if (a.likes < b.likes) return 1;
-    return 0;
-  };
 
   useEffect(() => {}, []);
 
@@ -78,64 +78,25 @@ const App = () => {
   };
 
   const handleCreateBlog = async (newBlog) => {
-    try {
-      const data = await blogService.createBlog(newBlog);
-      data.user = { username: user.username, name: user.name };
-
-      dispatch(setBlogs(blogs.concat(data).sort(compare)));
-      dispatch(
-        setNotification(
-          {
-            message: `a new blog ${newBlog.title} by ${newBlog.author} added`,
-            type: 'ok',
-          },
-          5
-        )
-      );
-    } catch (error) {
-      dispatch(setNotification({ message: 'error adding blog', type: 'ng' }, 5));
-    }
-  };
-
-  const handleAddLike = async (updatedBlog) => {
-    try {
-      const data = await blogService.updateBlog(updatedBlog);
-      dispatch(
-        setBlogs(
-          blogs
-            .map((blog) => {
-              if (blog.id === data.id) {
-                blog.likes = data.likes;
-              }
-              return blog;
-            })
-            .sort(compare)
-        )
-      );
-    } catch (error) {
-      dispatch(setNotification({ message: 'error updating blog', type: 'ng' }, 5));
-    }
+    dispatch(createNewBlog(newBlog, user));
   };
 
   const handleRemoveBlog = async (blogId) => {
-    try {
-      await blogService.deleteBlog(blogId);
-      dispatch(setBlogs(blogs.filter((blog) => blog.id !== blogId)));
-      dispatch(setNotification({ message: 'blog successfully deleted', type: 'ok' }, 5));
-    } catch (error) {
-      dispatch(setNotification({ message: 'error deleting blog', type: 'ng' }, 5));
-    }
+    dispatch(removeBlog(blogId));
+  };
+
+  const handleAddLike = async (updatedBlog) => {
+    dispatch(addBlogLike(updatedBlog));
   };
 
   const BlogList = () => {
     if (!blogs) return null;
 
+    const blogsToDisplay = [...blogs];
+
     return (
       <div>
-        <Togglable buttonLabel="new blog">
-          <NewBlogForm handleCreate={handleCreateBlog} />
-        </Togglable>
-        {blogs.map((blog) => (
+        {blogsToDisplay.sort(compare).map((blog) => (
           <Blog
             key={blog.id}
             blog={blog}
@@ -160,6 +121,9 @@ const App = () => {
           logout
         </button>
       </p>
+      <Togglable buttonLabel="new blog">
+        <NewBlogForm handleCreate={handleCreateBlog} />
+      </Togglable>
       <BlogList />
     </div>
   );
