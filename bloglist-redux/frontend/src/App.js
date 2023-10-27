@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import Blog from './components/Blog';
@@ -6,9 +6,10 @@ import Message from './components/Message';
 import NewBlogForm from './components/NewBlogForm';
 import Togglable from './components/Togglable';
 import blogService from './services/blogs';
-import loginService from './services/login';
-import { setNotification } from './reducers/notificationReducer';
+// import loginService from './services/login';
+// import { setNotification } from './reducers/notificationReducer';
 import { addBlogLike, createNewBlog, initializeBlogs, removeBlog } from './reducers/blogReducer';
+import { setUser, userLogin, userLogout } from './reducers/userReducer';
 
 const compare = (a, b) => {
   if (a.likes > b.likes) return -1;
@@ -17,9 +18,10 @@ const compare = (a, b) => {
 };
 
 const App = () => {
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const blogs = useSelector((state) => state.blogs);
   const notification = useSelector((state) => state.notification);
+  const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
   useEffect(() => {}, []);
@@ -28,7 +30,7 @@ const App = () => {
     const userJSONobj = window.localStorage.getItem('loggedUser');
     if (userJSONobj) {
       const loggedUser = JSON.parse(userJSONobj);
-      setUser(loggedUser);
+      dispatch(setUser(loggedUser));
       dispatch(initializeBlogs());
       blogService.setToken(loggedUser.token);
     }
@@ -36,26 +38,16 @@ const App = () => {
 
   const handleLogout = (event) => {
     event.preventDefault();
-    setUser(null);
-    window.localStorage.removeItem('loggedUser');
+    dispatch(userLogout());
   };
 
   const Login = () => {
     const handleLogin = async (event) => {
       event.preventDefault();
 
-      try {
-        const username = event.target.username.value;
-        const password = event.target.password.value;
-        const loggedUser = await loginService.login({ username, password });
-
-        window.localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
-        setUser(loggedUser);
-        blogService.setToken(loggedUser.token);
-        dispatch(initializeBlogs());
-      } catch (error) {
-        dispatch(setNotification({ message: 'wrong username or password', type: 'ng' }, 5));
-      }
+      const username = event.target.username.value;
+      const password = event.target.password.value;
+      dispatch(userLogin({ username, password }));
     };
 
     return (
@@ -116,7 +108,7 @@ const App = () => {
       <h2>Blogs</h2>
       {notification && <Message />}
       <p>
-        {user.name} logged in{' '}
+        {user.username} logged in{' '}
         <button id="logout-button" onClick={handleLogout}>
           logout
         </button>
