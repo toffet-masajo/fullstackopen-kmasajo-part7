@@ -5,6 +5,7 @@ import blogService from '../services/blogs';
 
 import { initializeBlogs } from './blogReducer';
 import { setNotification } from './notificationReducer';
+import { clearList, getUserList } from './userListReducer';
 
 const userSlice = createSlice({
   name: 'user',
@@ -30,6 +31,7 @@ export const userLogin = ({ username, password }) => {
       blogService.setToken(loggedUser.token);
       dispatch(setUser(loggedUser));
       dispatch(initializeBlogs());
+      dispatch(getUserList());
     } catch (error) {
       dispatch(setNotification({ message: 'wrong username or password', type: 'ng' }, 5));
     }
@@ -40,6 +42,7 @@ export const userLogout = () => {
   return (dispatch) => {
     window.localStorage.removeItem('loggedUser');
     dispatch(clearUser());
+    dispatch(clearList());
   };
 };
 
