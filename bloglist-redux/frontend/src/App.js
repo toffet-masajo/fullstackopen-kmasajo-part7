@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useMatch } from 'react-router-dom';
 
 import BlogList from './components/BlogList';
 import Login from './components/Login';
 import Message from './components/Message';
+import User from './components/User';
 import UserList from './components/UserList';
+
 import blogService from './services/blogs';
 
 import { initializeBlogs } from './reducers/blogReducer';
@@ -15,9 +17,11 @@ import { getUserList } from './reducers/userListReducer';
 const App = () => {
   const notification = useSelector((state) => state.notification);
   const user = useSelector((state) => state.user);
+  const users = useSelector((state) => state.userlist);
   const dispatch = useDispatch();
 
-  useEffect(() => {}, []);
+  const userMatch = useMatch('/users/:id');
+  const userItem = userMatch ? users.find((item) => item.id === userMatch.params.id) : null;
 
   useEffect(() => {
     const userJSONobj = window.localStorage.getItem('loggedUser');
@@ -49,6 +53,7 @@ const App = () => {
       </p>
 
       <Routes>
+        <Route path="/users/:id" element={<User user={userItem} />} />
         <Route path="/users" element={<UserList />} />
         <Route path="/" element={<BlogList />} />
       </Routes>

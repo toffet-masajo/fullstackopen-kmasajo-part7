@@ -12,6 +12,16 @@ router.get('/', async (request, response, next) => {
   }
 });
 
+router.get('/:id', async (request, response, next) => {
+  try {
+    const result = await User.findById(request.params.id);
+    if (result === null) response.status(400).json({ error: 'user not found' });
+    else response.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/', async (request, response, next) => {
   try {
     const { username, name, password } = request.body;
