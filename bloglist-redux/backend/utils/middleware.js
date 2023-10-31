@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/users');
+const Blog = require('../models/blogs');
 
 const tokenExtractor = (req, res, next) => {
   const auth = req.get('authorization');
@@ -26,6 +27,15 @@ const userExtractor = async (req, res, next) => {
   next();
 };
 
+const blogExtractor = async (req, res, next) => {
+  const blogId = req.params.id;
+  const blog = await Blog.findById(blogId);
+  if (!blog) req.blog = null;
+  else req.blog = blog;
+
+  next();
+};
+
 const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: 'unknown endpoint' });
 };
@@ -45,6 +55,7 @@ const errorHandler = (error, req, res, next) => {
 module.exports = {
   tokenExtractor,
   userExtractor,
+  blogExtractor,
   unknownEndpoint,
   errorHandler,
 };

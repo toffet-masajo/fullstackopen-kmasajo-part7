@@ -30,14 +30,19 @@ const Blog = ({ blog }) => {
           like
         </button>
         <br />
-        added by {blog.user.name}
-        <br />
+        added by {blog.user.name}{' '}
         {user && user.username === blog.user.username ? (
           <button id="remove-blog-button" onClick={handleDeleteButton}>
             remove
           </button>
         ) : null}
       </p>
+      <h2>comments</h2>
+      <ul>
+        {blog.comments.map((comment, idx) => (
+          <li key={idx}>{comment.content}</li>
+        ))}
+      </ul>
     </div>
   );
 };

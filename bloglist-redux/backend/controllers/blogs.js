@@ -1,12 +1,13 @@
 const router = require('express').Router();
 
 const Blog = require('../models/blogs');
+const Comment = require('../models/comments');
 const User = require('../models/users');
-const { userExtractor } = require('../utils/middleware');
+const { userExtractor, blogExtractor } = require('../utils/middleware');
 
 router.get('/', async (request, response, next) => {
   try {
-    const blogs = await Blog.find({}).populate('user');
+    const blogs = await Blog.find({}).populate('user').populate('comments');
     response.json(blogs);
   } catch (error) {
     next(error);
@@ -15,7 +16,7 @@ router.get('/', async (request, response, next) => {
 
 router.get('/:id', async (request, response, next) => {
   try {
-    const result = await Blog.findById(request.params.id);
+    const result = await Blog.findById(request.params.id).populate('user').populate('comments');
     if (result === null) response.status(400).json({ error: 'blog not found' });
     else response.status(200).json(result);
   } catch (error) {
@@ -82,6 +83,33 @@ router.delete('/:id', userExtractor, async (request, response, next) => {
     await Blog.findByIdAndRemove(request.params.id);
     await User.findByIdAndUpdate(userId, updatedUser, { new: true, context: 'query' });
     return response.status(204).json({ message: 'blog deleted' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/:id/comments', async (request, response, next) => {
+  try {
+    const comments = await Comment.find({ blogId: request.params.id });
+    response.json(comments);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:id/comments', blogExtractor, async (request, response, next) => {
+  try {
+    const blog = request.blog;
+    if (!blog) return response.status(404).json({ error: 'blog not found' });
+
+    const comment = new Comment({ content: request.body.content, blogId: request.params.id });
+    const result = await comment.save();
+
+    if (result === null) response.status(400).json({ error: 'comment not saved' });
+
+    blog.comments = blog.comments.concat(result._id);
+    await blog.save();
+    response.status(200).json(result);
   } catch (error) {
     next(error);
   }
