@@ -2,8 +2,10 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import Message from './Message';
 import { userLogin } from '../reducers/userReducer';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  const navigate = useNavigate();
   const notification = useSelector((state) => state.notification);
   const dispatch = useDispatch();
 
@@ -13,6 +15,7 @@ const Login = () => {
     const username = event.target.username.value;
     const password = event.target.password.value;
     dispatch(userLogin({ username, password }));
+    navigate('/');
   };
 
   return (

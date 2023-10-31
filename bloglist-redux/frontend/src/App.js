@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Route, Routes, useMatch } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useMatch } from 'react-router-dom';
 
 import Blog from './components/Blog';
 import BlogList from './components/BlogList';
@@ -14,6 +14,8 @@ import blogService from './services/blogs';
 import { initializeBlogs } from './reducers/blogReducer';
 import { setUser, userLogout } from './reducers/userReducer';
 import { getUserList } from './reducers/userListReducer';
+
+const linkStyle = { padding: 5 };
 
 const App = () => {
   const notification = useSelector((state) => state.notification);
@@ -34,9 +36,9 @@ const App = () => {
       const loggedUser = JSON.parse(userJSONobj);
       dispatch(setUser(loggedUser));
       dispatch(getUserList());
-      dispatch(initializeBlogs());
       blogService.setToken(loggedUser.token);
     }
+    dispatch(initializeBlogs());
   }, []);
 
   const handleLogout = (event) => {
@@ -44,23 +46,33 @@ const App = () => {
     dispatch(userLogout());
   };
 
-  if (!user) return <Login />;
-
   return (
     <div>
+      <div>
+        <Link style={linkStyle} to="/">
+          blogs
+        </Link>
+        <Link style={linkStyle} to="/users">
+          users
+        </Link>
+        {user ? (
+          <div>
+            <em>{user.username} logged in </em> <button onClick={handleLogout}>logout</button>
+          </div>
+        ) : (
+          <Link style={linkStyle} to="/login">
+            login
+          </Link>
+        )}
+      </div>
       <h2>Blogs</h2>
       {notification && <Message />}
-      <p>
-        {user.username} logged in{' '}
-        <button id="logout-button" onClick={handleLogout}>
-          logout
-        </button>
-      </p>
 
       <Routes>
         <Route path="/users/:id" element={<User user={userItem} />} />
-        <Route path="/users" element={<UserList />} />
+        <Route path="/users" element={user ? <UserList /> : <Navigate replace to="/login" />} />
         <Route path="/blogs/:id" element={<Blog blog={blogItem} />} />
+        <Route path="/login" element={!user ? <Login /> : <Navigate replace to="/" />} />
         <Route path="/" element={<BlogList />} />
       </Routes>
     </div>

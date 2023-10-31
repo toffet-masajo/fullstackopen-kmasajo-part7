@@ -32,7 +32,7 @@ const Blog = ({ blog }) => {
         <br />
         added by {blog.user.name}
         <br />
-        {user.username === blog.user.username ? (
+        {user && user.username === blog.user.username ? (
           <button id="remove-blog-button" onClick={handleDeleteButton}>
             remove
           </button>

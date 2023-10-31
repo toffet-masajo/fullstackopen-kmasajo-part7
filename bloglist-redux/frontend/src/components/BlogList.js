@@ -34,9 +34,11 @@ const BlogList = () => {
 
   return (
     <div>
-      <Togglable buttonLabel="new blog">
-        <NewBlogForm handleCreate={handleCreateBlog} />
-      </Togglable>
+      {user && (
+        <Togglable buttonLabel="new blog">
+          <NewBlogForm handleCreate={handleCreateBlog} />
+        </Togglable>
+      )}
       {blogsToDisplay.sort(compare).map((blog) => (
         <div key={blog.id} style={blogStyle}>
           <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
