@@ -1,47 +1,43 @@
-import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addBlogLike, removeBlog } from '../reducers/blogReducer';
 
-const Blog = ({ blog, user, handleUpdate, handleDelete }) => {
-  const [visible, setVisible] = useState(false);
-
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5,
-  };
+const Blog = ({ blog }) => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
 
   const handleLikeButton = (event) => {
     event.preventDefault();
-    handleUpdate(blog);
+    dispatch(addBlogLike(blog));
   };
 
   const handleDeleteButton = (event) => {
     event.preventDefault();
-    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) handleDelete(blog.id);
+    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) dispatch(removeBlog(blog.id));
   };
 
+  if (!blog) return null;
+
   return (
-    <div style={blogStyle} className="blog">
-      {blog.title} {blog.author} <button onClick={() => setVisible(!visible)}>{visible ? 'hide' : 'view'}</button>
-      {visible && (
-        <div className="blog-details">
-          {blog.url}
-          <br />
-          {blog.likes}{' '}
-          <button id="like-blog-button" onClick={handleLikeButton}>
-            like
+    <div>
+      <h2>
+        {blog.title} by {blog.author}
+      </h2>
+      <p>
+        <a href={blog.url}>{blog.url}</a>
+        <br />
+        {blog.likes} likes
+        <button id="like-blog-button" onClick={handleLikeButton}>
+          like
+        </button>
+        <br />
+        added by {blog.user.name}
+        <br />
+        {user.username === blog.user.username ? (
+          <button id="remove-blog-button" onClick={handleDeleteButton}>
+            remove
           </button>
-          <br />
-          {blog.user.name}
-          <br />
-          {user === blog.user.username ? (
-            <button id="remove-blog-button" onClick={handleDeleteButton}>
-              remove
-            </button>
-          ) : null}
-        </div>
-      )}
+        ) : null}
+      </p>
     </div>
   );
 };

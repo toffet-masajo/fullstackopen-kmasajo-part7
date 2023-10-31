@@ -1,9 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
 
-import Blog from './Blog';
 import NewBlogForm from './NewBlogForm';
 import Togglable from './Togglable';
-import { addBlogLike, createNewBlog, removeBlog } from '../reducers/blogReducer';
+import { createNewBlog } from '../reducers/blogReducer';
+import { Link } from 'react-router-dom';
 
 const compare = (a, b) => {
   if (a.likes > b.likes) return -1;
@@ -16,16 +16,16 @@ const BlogList = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
+  const blogStyle = {
+    paddingTop: 10,
+    paddingLeft: 2,
+    border: 'solid',
+    borderWidth: 1,
+    marginBottom: 5,
+  };
+
   const handleCreateBlog = async (newBlog) => {
     dispatch(createNewBlog(newBlog, user));
-  };
-
-  const handleRemoveBlog = async (blogId) => {
-    dispatch(removeBlog(blogId));
-  };
-
-  const handleAddLike = async (updatedBlog) => {
-    dispatch(addBlogLike(updatedBlog));
   };
 
   if (!blogs) return null;
@@ -38,13 +38,9 @@ const BlogList = () => {
         <NewBlogForm handleCreate={handleCreateBlog} />
       </Togglable>
       {blogsToDisplay.sort(compare).map((blog) => (
-        <Blog
-          key={blog.id}
-          blog={blog}
-          user={user.username}
-          handleUpdate={handleAddLike}
-          handleDelete={handleRemoveBlog}
-        />
+        <div key={blog.id} style={blogStyle}>
+          <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
+        </div>
       ))}
     </div>
   );

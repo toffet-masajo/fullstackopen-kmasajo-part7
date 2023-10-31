@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Route, Routes, useMatch } from 'react-router-dom';
 
+import Blog from './components/Blog';
 import BlogList from './components/BlogList';
 import Login from './components/Login';
 import Message from './components/Message';
@@ -16,12 +17,16 @@ import { getUserList } from './reducers/userListReducer';
 
 const App = () => {
   const notification = useSelector((state) => state.notification);
+  const blogs = useSelector((state) => state.blogs);
   const user = useSelector((state) => state.user);
   const users = useSelector((state) => state.userlist);
   const dispatch = useDispatch();
 
   const userMatch = useMatch('/users/:id');
   const userItem = userMatch ? users.find((item) => item.id === userMatch.params.id) : null;
+
+  const blogMatch = useMatch('/blogs/:id');
+  const blogItem = blogMatch ? blogs.find((item) => item.id === blogMatch.params.id) : null;
 
   useEffect(() => {
     const userJSONobj = window.localStorage.getItem('loggedUser');
@@ -55,6 +60,7 @@ const App = () => {
       <Routes>
         <Route path="/users/:id" element={<User user={userItem} />} />
         <Route path="/users" element={<UserList />} />
+        <Route path="/blogs/:id" element={<Blog blog={blogItem} />} />
         <Route path="/" element={<BlogList />} />
       </Routes>
     </div>
