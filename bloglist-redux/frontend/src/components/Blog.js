@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { addBlogLike, removeBlog } from '../reducers/blogReducer';
+import { addBlogComment, addBlogLike, removeBlog } from '../reducers/blogReducer';
 
 const Blog = ({ blog }) => {
   const dispatch = useDispatch();
@@ -13,6 +13,13 @@ const Blog = ({ blog }) => {
   const handleDeleteButton = (event) => {
     event.preventDefault();
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) dispatch(removeBlog(blog.id));
+  };
+
+  const handleAddComment = (event) => {
+    event.preventDefault();
+    const comment = event.target.comment.value;
+    event.target.comment.value = '';
+    dispatch(addBlogComment({ blogId: blog.id, comment }));
   };
 
   if (!blog) return null;
@@ -38,6 +45,10 @@ const Blog = ({ blog }) => {
         ) : null}
       </p>
       <h2>comments</h2>
+      <form onSubmit={handleAddComment}>
+        <input type="text" placeholder="comment" name="comment" />
+        <button>add comment</button>
+      </form>
       <ul>
         {blog.comments.map((comment, idx) => (
           <li key={idx}>{comment.content}</li>

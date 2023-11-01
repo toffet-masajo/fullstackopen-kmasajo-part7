@@ -43,8 +43,12 @@ const getAll = () => {
   return request.then((response) => response.data);
 };
 
+const addComment = ({ blogId, content }) => {
+  return axios.post(`${baseUrl}/${blogId}/comments`, { blogId, content }).then((response) => response.data);
+};
+
 const setToken = (newToken) => {
   token = `Bearer ${newToken}`;
 };
 
-export default { createBlog, updateBlog, deleteBlog, getAll, setToken };
+export default { createBlog, updateBlog, deleteBlog, getAll, addComment, setToken };
