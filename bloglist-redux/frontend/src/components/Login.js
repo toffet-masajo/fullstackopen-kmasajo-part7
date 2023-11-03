@@ -1,13 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
-
-import Message from './Message';
-import { userLogin } from '../reducers/userReducer';
 import { useNavigate } from 'react-router-dom';
+import { Button, TextField } from '@mui/material';
+
+import { userLogin } from '../reducers/userReducer';
 
 const Login = () => {
-  const navigate = useNavigate();
-  const notification = useSelector((state) => state.notification);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.user);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -15,23 +15,24 @@ const Login = () => {
     const username = event.target.username.value;
     const password = event.target.password.value;
     dispatch(userLogin({ username, password }));
-    navigate('/');
+    if (user) navigate('/');
   };
 
   return (
     <div>
-      <h2>Log in to application</h2>
-      {notification && <Message />}
+      <h2>Login</h2>
       <form onSubmit={handleLogin}>
         <div>
-          username <input key="username" type="text" name="username" />
+          <TextField label="username" name="username" />
         </div>
         <div>
-          password <input key="password" type="password" name="password" />
+          <TextField label="password" type="password" name="password" />
         </div>
-        <button id="login-button" type="submit">
-          Login
-        </button>
+        <div>
+          <Button variant="contained" color="primary" type="submit">
+            Login
+          </Button>
+        </div>
       </form>
     </div>
   );

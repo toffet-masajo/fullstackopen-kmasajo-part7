@@ -1,8 +1,11 @@
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
 import { addBlogComment, addBlogLike, removeBlog } from '../reducers/blogReducer';
 
 const Blog = ({ blog }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const user = useSelector((state) => state.user);
 
   const handleLikeButton = (event) => {
@@ -12,7 +15,10 @@ const Blog = ({ blog }) => {
 
   const handleDeleteButton = (event) => {
     event.preventDefault();
-    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) dispatch(removeBlog(blog.id));
+    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+      dispatch(removeBlog(blog));
+      navigate('/');
+    }
   };
 
   const handleAddComment = (event) => {

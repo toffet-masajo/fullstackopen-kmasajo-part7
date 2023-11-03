@@ -1,6 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
+
 import blogService from '../services/blogs';
 import { setNotification } from './notificationReducer';
+import { addNewBlogToUser, removeBlogFromUser } from './userListReducer';
 
 const blogSlice = createSlice({
   name: 'blogs',
@@ -42,7 +44,8 @@ export const createNewBlog = (newBlog, user) => {
   return async (dispatch) => {
     try {
       const data = await blogService.createBlog(newBlog);
-      data.user = { username: user.username, name: user.name };
+      dispatch(addNewBlogToUser({ ...data }));
+      data.user = { username: user.username, name: user.name, id: data.user };
       dispatch(addBlog(data));
       dispatch(setNotification({ message: `a new blog ${newBlog.title} by ${newBlog.author} added`, type: 'ok' }, 5));
     } catch (error) {
@@ -74,11 +77,13 @@ export const addBlogComment = ({ blogId, comment }) => {
   };
 };
 
-export const removeBlog = (blogId) => {
+export const removeBlog = (blog) => {
   return async (dispatch) => {
     try {
-      await blogService.deleteBlog(blogId);
-      dispatch(deleteBlog(blogId));
+      const { id, user } = blog;
+      await blogService.deleteBlog(id);
+      dispatch(deleteBlog(id));
+      dispatch(removeBlogFromUser({ blogId: id, userId: user.id }));
       dispatch(setNotification({ message: 'blog deleted', type: 'ok' }, 5));
     } catch (error) {
       dispatch(setNotification({ message: error.response.data.error, type: 'ng' }, 5));

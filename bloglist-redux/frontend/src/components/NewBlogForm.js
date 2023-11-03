@@ -1,3 +1,4 @@
+import { Button, TextField } from '@mui/material';
 import PropTypes from 'prop-types';
 
 const NewBlogForm = ({ handleCreate }) => {
@@ -25,18 +26,18 @@ const NewBlogForm = ({ handleCreate }) => {
       <form onSubmit={handleSubmit}>
         <div>
           <div>
-            title: <input key="blog-title" type="text" name="title" placeholder="blog title" />
+            <TextField label="title" name="title" placeholder="blog title" />
           </div>
           <div>
-            author: <input key="blog-author" type="text" name="author" placeholder="blog author" />
+            <TextField label="author" name="author" placeholder="blog author" />
           </div>
           <div>
-            url: <input key="blog-url" type="text" name="url" placeholder="blog url" />
+            <TextField label="url" name="url" placeholder="blog url" />
           </div>
           <div>
-            <button key="create-button" type="submit">
+            <Button variant="contained" color="primary" type="submit">
               create
-            </button>
+            </Button>
           </div>
         </div>
       </form>

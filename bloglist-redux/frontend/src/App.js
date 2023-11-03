@@ -1,3 +1,4 @@
+import { Button, Container } from '@mui/material';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, Navigate, Route, Routes, useMatch } from 'react-router-dom';
@@ -14,8 +15,6 @@ import blogService from './services/blogs';
 import { initializeBlogs } from './reducers/blogReducer';
 import { setUser, userLogout } from './reducers/userReducer';
 import { getUserList } from './reducers/userListReducer';
-
-const linkStyle = { padding: 5 };
 
 const App = () => {
   const notification = useSelector((state) => state.notification);
@@ -47,26 +46,29 @@ const App = () => {
   };
 
   return (
-    <div>
+    <Container>
+      <div>{notification && <Message />}</div>
       <div>
-        <Link style={linkStyle} to="/">
+        <Button variant="contained" color="primary" component={Link} to="/">
           blogs
-        </Link>
-        <Link style={linkStyle} to="/users">
+        </Button>
+        <Button variant="contained" color="primary" component={Link} to="/users">
           users
-        </Link>
+        </Button>
         {user ? (
-          <div>
-            <em>{user.username} logged in </em> <button onClick={handleLogout}>logout</button>
-          </div>
+          <>
+            <Button variant="contained" color="primary" onClick={handleLogout}>
+              logout
+            </Button>{' '}
+            <em>{user.username} logged in </em>
+          </>
         ) : (
-          <Link style={linkStyle} to="/login">
+          <Button variant="contained" color="primary" component={Link} to="/login">
             login
-          </Link>
+          </Button>
         )}
+        <h2>Blog App by Toffet Masajo</h2>
       </div>
-      <h2>Blogs</h2>
-      {notification && <Message />}
 
       <Routes>
         <Route path="/users/:id" element={<User user={userItem} />} />
@@ -75,7 +77,7 @@ const App = () => {
         <Route path="/login" element={!user ? <Login /> : <Navigate replace to="/" />} />
         <Route path="/" element={<BlogList />} />
       </Routes>
-    </div>
+    </Container>
   );
 };
 

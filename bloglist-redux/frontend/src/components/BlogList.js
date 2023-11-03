@@ -1,3 +1,4 @@
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 
 import NewBlogForm from './NewBlogForm';
@@ -16,14 +17,6 @@ const BlogList = () => {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5,
-  };
-
   const handleCreateBlog = async (newBlog) => {
     dispatch(createNewBlog(newBlog, user));
   };
@@ -39,11 +32,26 @@ const BlogList = () => {
           <NewBlogForm handleCreate={handleCreateBlog} />
         </Togglable>
       )}
-      {blogsToDisplay.sort(compare).map((blog) => (
-        <div key={blog.id} style={blogStyle}>
-          <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
-        </div>
-      ))}
+      <TableContainer component={Paper}>
+        <Table aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell>Title</TableCell>
+              <TableCell>Author</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {blogsToDisplay.sort(compare).map((blog) => (
+              <TableRow key={blog.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                <TableCell>
+                  <Link to={`/blogs/${blog.id}`}>{blog.title}</Link>
+                </TableCell>
+                <TableCell>{blog.author}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 };
