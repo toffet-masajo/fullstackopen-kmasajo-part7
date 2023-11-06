@@ -1,0 +1,53 @@
+{
+  "name": "blog-app",
+  "version": "1.0.0",
+  "description": "Exercise for Part4 of FullStackOpen course",
+  "main": "index.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=production node index.js",
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
+    "lint": "eslint .",
+    "lint-fix": "eslint . --fix",
+    "start:test": "cross-env NODE_ENV=test node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toffet-masajo/fullstackopen-kmasajo-blog.git"
+  },
+  "keywords": [
+    "node",
+    "nodejs",
+    "express",
+    "fullstack",
+    "web"
+  ],
+  "author": "Kristoffer Masajo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/toffet-masajo/fullstackopen-kmasajo-blog/issues"
+  },
+  "homepage": "https://github.com/toffet-masajo/fullstackopen-kmasajo-blog#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "lodash": "^4.17.21",
+    "mongoose": "^7.0.3",
+    "mongoose-unique-validator": "^4.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.36.0",
+    "eslint-plugin-cypress": "^2.13.3",
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "supertest": "^6.3.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "globalTeardown": "./tests/teardown.js"
+  }
+}
